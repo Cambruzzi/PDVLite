@@ -40,3 +40,10 @@ staticfiles/
 Thumbs.db
 .vscode/
 .idea/
+
+Plaintext
+# =========================
+# Arquivos de Carga de Dados
+# =========================
+*.csv
+*.xlsx
