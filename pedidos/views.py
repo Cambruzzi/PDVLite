@@ -1,6 +1,8 @@
 from rest_framework import viewsets
 from .models import Cliente, Produto, Pedido
 from .serializers import ClienteSerializer, ProdutoSerializer, PedidoSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.conf import settings
 
 class ClienteViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()
@@ -26,3 +28,26 @@ class PedidoViewSet(viewsets.ModelViewSet):
         e força o vendedor a ser o dono do Token JWT da requisição.
         """
         serializer.save(vendedor=self.request.user)
+
+class CookieTokenObtainPairView(TokenObtainPairView):
+    """
+    Customiza o login padrão do JWT para devolver o Access Token no JSON 
+    e blindar o Refresh Token em um Cookie HttpOnly.
+    """
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        refresh_token = response.data.get('refresh')
+
+        if refresh_token:
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=False, # Mude para True quando tiver HTTPS em produção
+                samesite='Lax',
+                max_age=7 * 24 * 60 * 60 # 7 dias
+            )
+            # Remove o refresh do JSON para que o front-end não tenha acesso a ele via JavaScript
+            del response.data['refresh']
+
+        return response

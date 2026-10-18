@@ -14,6 +14,7 @@ class ProdutoSerializer(serializers.ModelSerializer):
         fields = ['id', 'nome', 'preco', 'multiplo']
 
 class ItemPedidoSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
     class Meta:
         model = ItemPedido
         fields = ['id', 'produto', 'quantidade', 'preco_unitario', 'preco_tabela', 'rentabilidade']
@@ -44,5 +45,57 @@ class PedidoSerializer(serializers.ModelSerializer):
                     novo_item.save()
                 except DjangoValidationError as e:
                     raise serializers.ValidationError(e.message_dict)
+        pass # Apenas ilustrativo, mantenha o seu código!
+
+    def update(self, instance, validated_data):
+        """
+        Sincronização Inteligente de Itens na Edição
+        """
+        # 1. Tira os itens do pacote para atualizarmos o cabeçalho primeiro
+        itens_data = validated_data.pop('itens', None)
+        
+        with transaction.atomic():
+            # Atualiza o cabeçalho (ex: se ele trocou o cliente)
+            instance.cliente = validated_data.get('cliente', instance.cliente)
+            instance.save()
+
+            if itens_data is not None:
+                # Pega todos os itens que existem HOJE no banco de dados para este pedido
+                itens_atuais = {item.id: item for item in instance.itens.all()}
+                
+                # Coleta os IDs dos itens que o React mandou
+                itens_recebidos_ids = [item_data.get('id') for item_data in itens_data if item_data.get('id')]
+                
+                # PASSO A: DELETAR
+                # Se estava no banco e o React não mandou mais, o usuário apagou na tela
+                for item_id, item_obj in itens_atuais.items():
+                    if item_id not in itens_recebidos_ids:
+                        item_obj.delete()
+
+                # PASSO B: ATUALIZAR OU CRIAR
+                for item_data in itens_data:
+                    item_id = item_data.get('id')
                     
-        return pedido
+                    if item_id and item_id in itens_atuais:
+                        # ATUALIZAR ITEM EXISTENTE
+                        item_obj = itens_atuais[item_id]
+                        item_obj.produto = item_data.get('produto', item_obj.produto)
+                        item_obj.quantidade = item_data.get('quantidade', item_obj.quantidade)
+                        item_obj.preco_unitario = item_data.get('preco_unitario', item_obj.preco_unitario)
+                        
+                        try:
+                            item_obj.clean()
+                            item_obj.save() # A rentabilidade será recalculada, mas o preco_tabela fica protegido!
+                        except DjangoValidationError as e:
+                            raise serializers.ValidationError(e.message_dict)
+                    else:
+                        # CRIAR NOVO ITEM
+                        # Não tem ID? Então foi adicionado na tela de edição agora.
+                        novo_item = ItemPedido(pedido=instance, **item_data)
+                        try:
+                            novo_item.clean()
+                            novo_item.save() # O if not self.pk do models.py vai fotografar o preço de hoje
+                        except DjangoValidationError as e:
+                            raise serializers.ValidationError(e.message_dict)
+
+        return instance
