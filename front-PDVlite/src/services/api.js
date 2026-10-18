@@ -32,7 +32,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Se o erro for 401 (Expirou) e ainda não tentámos refazer a requisição
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest.url.includes('login')) {
       originalRequest._retry = true;
 
       try {

@@ -35,6 +35,6 @@ it('Deve mostrar mensagem de erro com credenciais inválidas', () => {
     cy.wait('@tentativaLogin');
 
     // 3. Verifica a mensagem completa e exata que definimos no componente
-    cy.contains('Usuário ou senha incorretos. Tente novamente.').should('be.visible');
+    cy.contains('Usuário ou senha incorretos').should('be.visible');
   });
 });

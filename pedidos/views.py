@@ -1,6 +1,7 @@
 from rest_framework import viewsets,generics
 from .models import Cliente, Produto, Pedido
-from .serializers import ClienteSerializer, ProdutoSerializer, PedidoSerializer, CadastroSerializer
+from pedidos.serializers.vendas import ClienteSerializer, ProdutoSerializer, PedidoSerializer
+from pedidos.serializers.auth import CadastroSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.conf import settings
 from rest_framework.permissions import AllowAny
