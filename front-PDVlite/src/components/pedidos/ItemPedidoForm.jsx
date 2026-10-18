@@ -4,137 +4,147 @@ export default function ItemPedidoForm({ produtos, onAdicionarItem }) {
   const [produtoId, setProdutoId] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [precoUnitario, setPrecoUnitario] = useState('');
-  const [rentabilidade, setRentabilidade] = useState(null);
+  const [rentabilidadePreview, setRentabilidadePreview] = useState(null);
 
-  const produtoSelecionado = produtos.find(p => p.id === parseInt(produtoId));
-
-  // 1. O Filtro Sênior: Bloqueia letras, aceita apenas números e uma única vírgula
-  const formatarEntrada = (valor) => {
-    let formatado = valor.replace(/[^0-9,]/g, ''); // Remove tudo que não for número ou vírgula
-    const partes = formatado.split(',');
-    if (partes.length > 2) {
-      // Se o usuário tentar digitar duas vírgulas (ex: 5,5,5), mantemos apenas a primeira
-      formatado = partes[0] + ',' + partes.slice(1).join('');
-    }
-    return formatado;
-  };
-
-  // 2. Helper para o React e o Django fazerem contas matemáticas (transforma vírgula em ponto)
-  const converterParaFloat = (valorStr) => {
-    if (!valorStr) return 0;
-    return parseFloat(valorStr.replace(',', '.'));
-  };
-
-  // Quando o usuário seleciona um produto, preenchemos o preço já convertendo o ponto do banco para vírgula na tela
+  // Calcula a rentabilidade em tempo real enquanto o utilizador digita
   useEffect(() => {
-    if (produtoSelecionado) {
-      setPrecoUnitario(produtoSelecionado.preco.replace('.', ','));
-    } else {
-      setPrecoUnitario('');
-    }
-  }, [produtoSelecionado]);
-
-  // Cálculo da rentabilidade em tempo real
-  useEffect(() => {
-    if (produtoSelecionado && precoUnitario) {
-      const precoDigitado = converterParaFloat(precoUnitario);
-      const precoTabela = parseFloat(produtoSelecionado.preco);
-
-      if (precoDigitado > precoTabela) setRentabilidade('otima');
-      else if (precoDigitado >= (precoTabela * 0.9)) setRentabilidade('boa');
-      else setRentabilidade('ruim');
-    } else {
-      setRentabilidade(null);
-    }
-  }, [precoUnitario, produtoSelecionado]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!produtoSelecionado) return;
-
-    const qtdFloat = converterParaFloat(quantidade);
-    const precoFloat = converterParaFloat(precoUnitario);
-
-    if (qtdFloat <= 0 || precoFloat <= 0) {
-      alert("A quantidade e o valor devem ser maiores que zero.");
+    if (!produtoId || !precoUnitario) {
+      setRentabilidadePreview(null);
       return;
+    }
+
+    const produto = produtos.find(p => p.id === parseInt(produtoId));
+    if (produto) {
+      const precoTabela = parseFloat(produto.preco);
+      const precoDigitado = parseFloat(precoUnitario.replace(',', '.'));
+
+      if (precoDigitado > precoTabela) {
+        setRentabilidadePreview('ÓTIMA');
+      } else {
+        const desconto = ((precoTabela - precoDigitado) / precoTabela) * 100;
+        if (desconto <= 10) {
+          setRentabilidadePreview('BOA');
+        } else {
+          setRentabilidadePreview('RUIM');
+        }
+      }
+    }
+  }, [produtoId, precoUnitario, produtos]);
+
+  const handleAdicionar = (e) => {
+    e.preventDefault();
+    if (!produtoId || !quantidade || !precoUnitario) return;
+
+    const produtoSelecionado = produtos.find(p => p.id === parseInt(produtoId));
+    
+    // Converte vírgulas para pontos se o utilizador as tiver digitado
+    const qtdNum = parseFloat(quantidade.replace(',', '.'));
+    const precoNum = parseFloat(precoUnitario.replace(',', '.'));
+    const multiploNum = parseFloat(produtoSelecionado.multiplo);
+
+    // VALIDAÇÃO DE MÚLTIPLO FRONT-END
+    if (multiploNum > 0) {
+      // Multiplicamos por 1000 para evitar o famoso bug de precisão decimal do JavaScript (ex: 0.3 % 0.1)
+      const resto = (qtdNum * 1000) % (multiploNum * 1000);
+      if (resto !== 0) {
+        alert(`A quantidade para "${produtoSelecionado.nome}" tem de ser múltipla de ${produtoSelecionado.multiplo}.`);
+        return;
+      }
     }
 
     onAdicionarItem({
       produto_id: produtoSelecionado.id,
       nome: produtoSelecionado.nome,
-      quantidade: qtdFloat,
-      preco_unitario: precoFloat,
-      rentabilidadeVisual: rentabilidade
+      quantidade: qtdNum,
+      preco_unitario: precoNum,
+      rentabilidadeVisual: rentabilidadePreview
     });
 
     // Limpa os campos após adicionar
     setProdutoId('');
     setQuantidade('');
     setPrecoUnitario('');
+    setRentabilidadePreview(null);
   };
 
-  // Cores dinâmicas para a rentabilidade
   const coresRentabilidade = {
-    otima: 'text-green-600 bg-green-100',
-    boa: 'text-blue-600 bg-blue-100',
-    ruim: 'text-red-600 bg-red-100'
+    'ÓTIMA': 'bg-green-100 text-green-800 border-green-200',
+    'BOA': 'bg-blue-100 text-blue-800 border-blue-200',
+    'RUIM': 'bg-red-100 text-red-800 border-red-200',
   };
 
   return (
-    <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200 mb-4">
-      <h2 className="text-purple-700 font-bold mb-3 text-sm uppercase tracking-wide">Adicionar Produto</h2>
+    <div className="bg-white p-5 rounded-md shadow-sm border border-gray-200 mb-6">
+      <h2 className="text-sm font-bold text-purple-800 mb-4 uppercase">Adicionar Produto</h2>
       
-      {/* Usamos flex-wrap para garantir que fica bonito no celular também */}
-      <form onSubmit={handleSubmit} className="flex flex-wrap md:flex-nowrap items-end gap-3">
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Produto</label>
+      <form onSubmit={handleAdicionar} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        
+        <div className="md:col-span-5">
+          {/* 1. Adicionado htmlFor="produto" */}
+          <label htmlFor="produto" className="block text-sm font-semibold text-gray-700 mb-1">Produto</label>
           <select 
-            className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 bg-white"
-            value={produtoId} onChange={e => setProdutoId(e.target.value)} required
+            id="produto" /* Adicionado id="produto" */
+            required
+            className="w-full p-2.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 outline-none"
+            value={produtoId}
+            onChange={(e) => {
+              setProdutoId(e.target.value);
+              const prod = produtos.find(p => p.id === parseInt(e.target.value));
+              if (prod) setPrecoUnitario(prod.preco);
+            }}
           >
-            <option value="">-- Selecione --</option>
+            <option value="">Selecione um produto...</option>
             {produtos.map(p => (
-              <option key={p.id} value={p.id}>{p.nome} (Mult: {p.multiplo})</option>
+              <option key={p.id} value={p.id}>
+                {p.nome} (Mult: {parseFloat(p.multiplo)}) - R$ {p.preco}
+              </option>
             ))}
           </select>
         </div>
 
-        {/* Campo Quantidade Ajustado */}
-        <div className="w-28">
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Quantidade</label>
+        <div className="md:col-span-2">
+          {/* 2. Adicionado htmlFor="quantidade" */}
+          <label htmlFor="quantidade" className="block text-sm font-semibold text-gray-700 mb-1">Quantidade</label>
           <input 
+            id="quantidade" /* Adicionado id="quantidade" */
             type="text" 
-            inputMode="decimal" // Força o teclado numérico no celular
             required
-            className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
-            value={quantidade} 
-            onChange={e => setQuantidade(formatarEntrada(e.target.value))}
             placeholder="Ex: 5 ou 1,5"
+            className="w-full p-2.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 outline-none"
+            value={quantidade}
+            onChange={(e) => setQuantidade(e.target.value)}
           />
         </div>
 
-        {/* Campo Valor Unitário Ajustado */}
-        <div className="w-36 relative">
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Valor Unitário (R$)</label>
+        <div className="md:col-span-3 relative">
+          <div className="flex items-center gap-3 mb-1">
+            {/* 3. Adicionado htmlFor="precoUnitario" */}
+            <label htmlFor="precoUnitario" className="block text-sm font-semibold text-gray-700 whitespace-nowrap">Valor Unit. (R$)</label>
+            {rentabilidadePreview && (
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${coresRentabilidade[rentabilidadePreview]}`}>
+                {rentabilidadePreview}
+              </span>
+            )}
+          </div>
           <input 
+            id="precoUnitario" /* Adicionado id="precoUnitario" */
             type="text" 
-            inputMode="decimal" 
             required
-            className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
-            value={precoUnitario} 
-            onChange={e => setPrecoUnitario(formatarEntrada(e.target.value))}
+            className="w-full p-2.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 outline-none"
+            value={precoUnitario}
+            onChange={(e) => setPrecoUnitario(e.target.value)}
           />
-          {rentabilidade && (
-            <span className={`absolute -top-2 -right-2 text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase shadow-sm ${coresRentabilidade[rentabilidade]}`}>
-              {rentabilidade}
-            </span>
-          )}
         </div>
 
-        <button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-md text-sm font-bold transition-colors w-full md:w-auto">
-          + Adicionar
-        </button>
+        <div className="md:col-span-2">
+          <button 
+            type="submit"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-4 rounded-md transition-colors"
+          >
+            + Adicionar
+          </button>
+        </div>
+
       </form>
     </div>
   );

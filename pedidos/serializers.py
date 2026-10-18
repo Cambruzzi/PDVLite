@@ -45,7 +45,7 @@ class PedidoSerializer(serializers.ModelSerializer):
                     novo_item.save()
                 except DjangoValidationError as e:
                     raise serializers.ValidationError(e.message_dict)
-        pass # Apenas ilustrativo, mantenha o seu código!
+        return pedido 
 
     def update(self, instance, validated_data):
         """

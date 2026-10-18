@@ -37,35 +37,40 @@ export default function EmissaoPedido() {
   };
 
   const handleSalvarPedido = async () => {
-    if (!clienteId || itens.length === 0) {
-      alert("Selecione um cliente e adicione pelo menos um item.");
+    if (!clienteId) {
+      alert("Selecione um cliente.");
+      return;
+    }
+    if (itens.length === 0) {
+      alert("Adicione pelo menos um item ao pedido.");
       return;
     }
 
     try {
-      setIsSalvando(true);
-      // Formata o payload exatamente como o back-end e nosso Serializer exigem
+      // O SEGREDO ESTÁ AQUI: Converter os dados da tela para o formato do Django
       const payload = {
         cliente: parseInt(clienteId),
-        itens: itens.map(i => ({
-          produto: i.produto_id,
-          quantidade: i.quantidade,
-          preco_unitario: i.preco_unitario
+        itens: itens.map(item => ({
+          produto: item.produto_id,         // O Django exige 'produto' e não 'produto_id'
+          quantidade: item.quantidade,      // Já é um número do parseFloat
+          preco_unitario: item.preco_unitario // Já é um número do parseFloat
         }))
       };
 
       await api.post('pedidos/', payload);
-      alert("Pedido emitido com Sucesso!");
       
-      // Limpa a tela
+      alert("Pedido emitido com sucesso!");
+      // Limpar o ecrã após salvar
       setClienteId('');
       setItens([]);
+      
     } catch (error) {
-      // O error.response.data trará a mensagem amigável do backend se o múltiplo estiver errado
-      const mensagemErro = error.response?.data ? JSON.stringify(error.response.data) : "Erro interno.";
-      alert("Falha ao salvar: " + mensagemErro);
-    } finally {
-      setIsSalvando(false);
+      // Se der erro, isto vai mostrar exatamente o campo que o Django rejeitou
+      const mensagemErro = error.response?.data 
+        ? JSON.stringify(error.response.data) 
+        : "Erro de conexão com o servidor.";
+      
+      alert("Falha ao salvar o pedido: " + mensagemErro);
     }
   };
 
