@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import EmissaoPedido from './pages/EmissaoPedido';
 import EdicaoPedido from './pages/EdicaoPedido';
 import MeusPedidos from './pages/MeusPedidos';
+import Cadastro from './pages/Cadastro';
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         {/* Adicionei um padding-top (pt-8) para afastar o conteúdo do cabeçalho */}
         <main className="container mx-auto px-4 pb-12 pt-8">
           <Routes>
+            <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<EmissaoPedido />} />
             <Route path="/pedido/:id/editar" element={<EdicaoPedido />} />

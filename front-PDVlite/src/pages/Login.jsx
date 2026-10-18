@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api, { setToken } from '../services/api';
 
 export default function Login() {
@@ -84,6 +84,11 @@ export default function Login() {
             >
               {isLoading ? 'Autenticando...' : 'Entrar no Sistema'}
             </button>
+            <div className="text-center mt-4">
+              <Link to="/cadastro" className="text-sm text-gray-600 hover:text-purple-700 hover:underline">
+                Não tem conta? Cadastre-se aqui
+              </Link>
+            </div>
           </form>
         </div>
       </div>

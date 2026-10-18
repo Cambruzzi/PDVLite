@@ -1,8 +1,10 @@
-from rest_framework import viewsets
+from rest_framework import viewsets,generics
 from .models import Cliente, Produto, Pedido
-from .serializers import ClienteSerializer, ProdutoSerializer, PedidoSerializer
+from .serializers import ClienteSerializer, ProdutoSerializer, PedidoSerializer, CadastroSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.conf import settings
+from rest_framework.permissions import AllowAny
+from django.contrib.auth.models import User
 
 class ClienteViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()
@@ -51,3 +53,8 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             del response.data['refresh']
 
         return response
+
+class CadastroUsuarioView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = CadastroSerializer
+    permission_classes = [AllowAny]
