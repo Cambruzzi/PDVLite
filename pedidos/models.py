@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 from decimal import Decimal
 
 class BaseModel(models.Model):
@@ -28,6 +29,16 @@ class Pedido(BaseModel):
     
     def __str__(self):
         return f"Pedido #{self.id} - {self.cliente.nome}"
+
+class Pedido(BaseModel):
+    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name='pedidos')
+    
+    # 2. NOVO CAMPO: Amarramos o pedido ao usuário logado
+    vendedor = models.ForeignKey(User, on_delete=models.PROTECT, related_name='pedidos_realizados', null=True)
+    
+    def __str__(self):
+        vendedor_nome = self.vendedor.username if self.vendedor else "Sistema"
+        return f"Pedido #{self.id} - {self.cliente.nome} (Vendedor: {vendedor_nome})"
 
 class ItemPedido(BaseModel):
     class Rentabilidade(models.TextChoices):

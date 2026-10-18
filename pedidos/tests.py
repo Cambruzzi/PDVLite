@@ -2,9 +2,12 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from decimal import Decimal
 from .models import Cliente, Produto, Pedido, ItemPedido
+from django.contrib.auth.models import User
 
 class PedidoAPITest(APITestCase):
     def setUp(self):
+        self.usuario = User.objects.create_user(username='admin_teste', password='123')
+        self.client.force_authenticate(user=self.usuario)
         self.cliente = Cliente.objects.create(nome="Empresa XPTO")
         self.produto = Produto.objects.create(
             nome="Cabo de Aço", 
