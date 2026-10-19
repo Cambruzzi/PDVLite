@@ -58,6 +58,11 @@ export default function ItemPedidoForm({ produtos, onAdicionarItem }) {
       return; // Interrompe a função, não deixa adicionar à lista!
     }
 
+    if (!quantidade || quantidade < 1) {
+      alert("A quantidade deve ser um número inteiro maior que zero.");
+      return;
+    }
+
     const produtoSelecionado = produtos.find(p => p.id === parseInt(produtoId));
     
     const qtdNum = parseFloat(quantidade.replace(',', '.'));
@@ -123,10 +128,23 @@ export default function ItemPedidoForm({ produtos, onAdicionarItem }) {
         <div className="md:col-span-2">
           <label htmlFor="quantidade" className="block text-sm font-semibold text-gray-700 mb-1">Quantidade</label>
           <input 
-            id="quantidade" type="text" required placeholder="Ex: 5 ou 1,5"
-            className="w-full p-2.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 outline-none"
+          type="number"
+            min="1"
+            step="1"
             value={quantidade}
-            onChange={(e) => setQuantidade(e.target.value)}
+            onChange={(e) => {
+              const valor = e.target.value;
+              if (valor === '') {
+                setQuantidade('');
+                return;
+              }              
+              const numeroInteiro = parseInt(valor, 10);              
+              if (!isNaN(numeroInteiro) && numeroInteiro >= 1) {
+                setQuantidade(numeroInteiro);
+              }
+            }}
+            className="w-full bg-white border border-gray-300 text-gray-800 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block p-2.5"
+            placeholder="Qtd"
           />
         </div>
 
