@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from decimal import Decimal
+from django.core.validators import MinValueValidator
 
 class BaseModel(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -26,14 +27,6 @@ class Produto(BaseModel):
 
 class Pedido(BaseModel):
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name='pedidos')
-    
-    def __str__(self):
-        return f"Pedido #{self.id} - {self.cliente.nome}"
-
-class Pedido(BaseModel):
-    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name='pedidos')
-    
-    # 2. NOVO CAMPO: Amarramos o pedido ao usuário logado
     vendedor = models.ForeignKey(User, on_delete=models.PROTECT, related_name='pedidos_realizados', null=True)
     
     def __str__(self):
@@ -49,7 +42,7 @@ class ItemPedido(BaseModel):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='itens')
     produto = models.ForeignKey(Produto, on_delete=models.PROTECT)
     
-    quantidade = models.DecimalField(max_digits=10, decimal_places=3)
+    quantidade = models.IntegerField(validators=[MinValueValidator(1)],help_text="A quantidade deve ser um número inteiro maior que zero.")
     preco_unitario = models.DecimalField(max_digits=12, decimal_places=2)
     preco_tabela = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
     
