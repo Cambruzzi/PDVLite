@@ -1,35 +1,59 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import './index.css';
+import api, { setToken } from './services/api';
 
-// Componentes Base
 import Navbar from './components/Navbar';
-
-// Páginas
 import Login from './pages/Login';
+import Cadastro from './pages/Cadastro';
 import EmissaoPedido from './pages/EmissaoPedido';
 import EdicaoPedido from './pages/EdicaoPedido';
 import MeusPedidos from './pages/MeusPedidos';
-import Cadastro from './pages/Cadastro';
 
 export default function App() {
+  const [isVerificandoSessao, setIsVerificandoSessao] = useState(true);
+
+  useEffect(() => {
+    const restaurarSessao = async () => {
+      try {
+        // Tenta renovar o token silenciosamente usando o Cookie HttpOnly
+        const response = await api.post('token/refresh/');
+        // Se deu certo, salva o novo Access Token na RAM
+        setToken(response.data.access);
+      } catch (error) {
+        // Se falhar (não tem cookie ou expirou), apenas limpa o token
+        setToken(null);
+      } finally {
+        // Libera a renderização da aplicação
+        setIsVerificandoSessao(false);
+      }
+    };
+
+    restaurarSessao();
+  }, []);
+
+  if (isVerificandoSessao) {
+    return (
+      <div className="min-h-screen bg-purple-800 flex items-center justify-center">
+        <div className="text-white text-xl font-bold animate-pulse">
+          A restaurar sessão...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 text-gray-800">
-        
-        {/* A nossa nova barra de navegação inteligente */}
         <Navbar />
-        
-        {/* Adicionei um padding-top (pt-8) para afastar o conteúdo do cabeçalho */}
         <main className="container mx-auto px-4 pb-12 pt-8">
           <Routes>
-            <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/" element={<EmissaoPedido />} />
             <Route path="/pedido/:id/editar" element={<EdicaoPedido />} />
             <Route path="/meus-pedidos" element={<MeusPedidos />} />
           </Routes>
         </main>
-        
       </div>
     </BrowserRouter>
   );

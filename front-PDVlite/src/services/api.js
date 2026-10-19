@@ -2,11 +2,10 @@ import axios from 'axios';
 
 // 1. Instância base com a configuração de Cookies ativada
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/',
-  withCredentials: true, // Essencial: Diz ao navegador para enviar o Cookie HttpOnly sempre
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/',
+  withCredentials: true,
 });
 
-// 2. Memória local para o Access Token (Blindado contra XSS)
 let accessToken = null;
 
 export const setToken = (token) => {
@@ -32,7 +31,8 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Se o erro for 401 (Expirou) e ainda não tentámos refazer a requisição
-    if (error.response?.status === 401 && !originalRequest.url.includes('login')) {
+    if (error.response?.status === 401 && !originalRequest.url.includes('login') &&
+      !originalRequest.url.includes('refresh')) {
       originalRequest._retry = true;
 
       try {

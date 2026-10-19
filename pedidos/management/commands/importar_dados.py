@@ -8,7 +8,6 @@ class Command(BaseCommand):
     help = 'Importa clientes e produtos a partir de arquivos CSV'
 
     def handle(self, *args, **kwargs):
-        # Caminhos dos arquivos (Coloque os arquivos CSV na raiz do projeto, junto com manage.py)
         caminho_clientes = 'clientes.csv'
         caminho_produtos = 'produtos.csv'
 
@@ -23,7 +22,6 @@ class Command(BaseCommand):
         with open(caminho, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                # Usa update_or_create para não duplicar se rodar o comando duas vezes
                 cliente, created = Cliente.objects.update_or_create(
                     id=row['ID'],
                     defaults={'nome': row['Nome']}
@@ -39,11 +37,9 @@ class Command(BaseCommand):
         with open(caminho, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                # Limpeza do formato de moeda (R$ 550.000,00 -> 550000.00)
                 preco_str = row['Preço Unitário (R$)'].replace('.', '').replace(',', '.')
                 preco = Decimal(preco_str)
 
-                # Tratamento do múltiplo (se vazio, vira 0)
                 multiplo_str = row['Múltiplo'].strip()
                 multiplo = Decimal(multiplo_str) if multiplo_str else Decimal('0.000')
 

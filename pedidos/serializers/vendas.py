@@ -30,9 +30,7 @@ class PedidoSerializer(serializers.ModelSerializer):
         read_only_fields = ['vendedor']
 
     def create(self, validated_data):
-        # O Serializer não pensa mais, ele apenas delega o trabalho para o Serviço
         return criar_pedido(validated_data)
 
     def update(self, instance, validated_data):
-        # Delegação do trabalho de atualização
         return atualizar_pedido(instance, validated_data)

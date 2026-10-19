@@ -57,10 +57,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+cors_origins_env = os.environ.get(
+    'CORS_ALLOWED_ORIGINS', 
+    'http://localhost:5173,http://127.0.0.1:5173'
+)
+CORS_ALLOWED_ORIGINS = cors_origins_env.split(',')
 
 CORS_ALLOW_CREDENTIALS = True
 

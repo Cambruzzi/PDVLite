@@ -1,7 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ClienteViewSet, ProdutoViewSet, PedidoViewSet, CookieTokenObtainPairView, CadastroUsuarioView
-from rest_framework_simplejwt.views import TokenRefreshView
+
+# Importações dos novos módulos
+from .views.vendas import ClienteViewSet, ProdutoViewSet, PedidoViewSet
+from .views.auth import CookieTokenObtainPairView, CookieTokenRefreshView, CadastroUsuarioView
 
 router = DefaultRouter()
 router.register(r'clientes', ClienteViewSet)
@@ -10,8 +12,7 @@ router.register(r'pedidos', PedidoViewSet, basename='pedidos')
 
 urlpatterns = [
     path('', include(router.urls)),
-    # Novas rotas de segurança
     path('login/', CookieTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'), # A NOVA VIEW!
     path('cadastro/', CadastroUsuarioView.as_view(), name='cadastro_usuario'),
 ]

@@ -8,8 +8,6 @@ class CadastroSerializer(serializers.ModelSerializer):
         fields = ['username', 'password']
 
     def create(self, validated_data):
-        # O 'create_user' é crucial aqui! Ele aplica a criptografia (hash) na senha.
-        # Se usássemos apenas .create(), a senha ficaria exposta no banco de dados.
         user = User.objects.create_user(
             username=validated_data['username'],
             password=validated_data['password']
