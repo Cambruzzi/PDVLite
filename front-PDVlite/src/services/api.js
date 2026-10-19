@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 1. Instância base com a configuração de Cookies ativada
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://pdvlite.pythonanywhere.com',
+  baseURL: import.meta.env.VITE_API_URL || 'https://pdvlite.pythonanywhere.com/api',
   withCredentials: true,
 });
 
@@ -37,7 +37,7 @@ api.interceptors.response.use(
 
       try {
         // Tenta renovar o token chamando a rota de refresh (o navegador envia o Cookie aqui)
-        const res = await axios.post('http://127.0.0.1:8000/api/token/refresh/', {}, {
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/token/refresh/`, {}, {
           withCredentials: true 
         });
 
