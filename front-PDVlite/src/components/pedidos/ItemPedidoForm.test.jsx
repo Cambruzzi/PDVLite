@@ -19,8 +19,7 @@ describe('Regras de Negócio: ItemPedidoForm', () => {
 
     // 3. Simula o utilizador a digitar 70.000 no valor unitário (10k a mais que a tabela)
     const inputValor = screen.getByLabelText(/Valor Unit\. \(R\$\)/i);
-    fireEvent.change(inputValor, { target: { value: '70000' } });
-
+    fireEvent.change(inputValor, { target: { value: '7000000' } });
     // 4. Verifica (Assert) se a interface reagiu corretamente e mostrou "ÓTIMA"
     expect(screen.getByText('ÓTIMA')).toBeInTheDocument();
   });

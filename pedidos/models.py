@@ -61,12 +61,23 @@ class ItemPedido(BaseModel):
 
     def clean(self):
         super().clean()
+        
+        # 1. Validação do Múltiplo
         if self.produto and self.quantidade and self.produto.multiplo > 0:
-            resto = self.quantidade % self.produto.multiplo
-            if resto != 0:
-                raise ValidationError({
-                    'quantidade': f"A quantidade do produto '{self.produto.nome}' deve ser múltipla de {self.produto.multiplo}."
-                })
+            # Multiplicamos por 1000 para evitar erros de precisão com casas decimais (ex: 0.3) no Python
+            if (self.quantidade * 1000) % (self.produto.multiplo * 1000) != 0:
+                raise ValidationError({'quantidade': f'A quantidade deve ser múltipla de {self.produto.multiplo}.'})
+
+        # 2. Bloqueio de Rentabilidade RUIM (Desconto > 10%)
+        preco_base = self.preco_tabela if self.preco_tabela else self.produto.preco
+        
+        if self.preco_unitario and preco_base:
+            if self.preco_unitario < preco_base:
+                desconto = ((preco_base - self.preco_unitario) / preco_base) * 100
+                if desconto > 10:
+                    raise ValidationError({
+                        'preco_unitario': 'Venda bloqueada: Não é permitido aplicar um desconto superior a 10% (Rentabilidade RUIM).'
+                    })
 
     def save(self, *args, **kwargs):
         if not self.pk and self.produto:

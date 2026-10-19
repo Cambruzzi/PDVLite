@@ -11,7 +11,6 @@ export default function MeusPedidos() {
     const carregarDados = async () => {
       try {
         setIsLoading(true);
-        // Busca os pedidos do vendedor logado e a lista de clientes para traduzir o nome
         const [resPedidos, resClientes] = await Promise.all([
           api.get('pedidos/'),
           api.get('clientes/')
@@ -28,18 +27,24 @@ export default function MeusPedidos() {
     carregarDados();
   }, []);
 
-  // Helper para buscar o nome do cliente pelo ID
   const getClienteNome = (id) => {
     const cliente = clientes.find(c => c.id === id);
     return cliente ? cliente.nome : 'Desconhecido';
   };
 
-  // Helper para somar o valor total de um pedido
   const calcularTotal = (itens) => {
     return itens.reduce((acc, item) => acc + (parseFloat(item.quantidade) * parseFloat(item.preco_unitario)), 0);
   };
 
-  if (isLoading) return <div className="text-center py-10 text-purple-700 font-bold text-sm">Buscando seus pedidos...</div>;
+  // 1. ADICIONADA A FUNÇÃO DE FORMATAÇÃO: Coloca os pontos nos milhares automaticamente
+  const formatarValor = (valor) => {
+    return new Intl.NumberFormat('pt-BR', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    }).format(valor);
+  };
+
+  if (isLoading) return <div className="text-center py-10 text-purple-700 font-bold text-sm">A procurar os seus pedidos...</div>;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -52,12 +57,12 @@ export default function MeusPedidos() {
 
       {pedidos.length === 0 ? (
         <div className="bg-white p-8 rounded-md shadow-sm border border-gray-200 text-center">
-          <p className="text-gray-600 mb-4 text-sm">Você ainda não possui pedidos registrados.</p>
+          <p className="text-gray-600 mb-4 text-sm">Ainda não possui pedidos registados.</p>
         </div>
       ) : (
         <div className="bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden">
           <table className="w-full text-left text-sm text-gray-700">
-            <thead className="bg-purple-50 text-purple-800 text-xs uppercase">
+            <thead className="bg-purple-50 text-purple-800 text-xs uppercase font-bold">
               <tr>
                 <th className="p-3">Nº Pedido</th>
                 <th className="p-3">Data</th>
@@ -67,7 +72,7 @@ export default function MeusPedidos() {
                 <th className="p-3 text-center">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-100">
               {pedidos.map(pedido => (
                 <tr key={pedido.id} className="hover:bg-gray-50 transition-colors">
                   <td className="p-3 font-bold text-purple-700">#{pedido.id}</td>
@@ -80,14 +85,17 @@ export default function MeusPedidos() {
                   <td className="p-3 text-center font-bold">
                     {pedido.itens.length}
                   </td>
+                  
+                  {/* 2. CÉLULA DO TOTAL ATUALIZADA COM A FUNÇÃO FORMATARVALOR */}
                   <td className="p-3 text-right font-black text-gray-900">
-                    R$ {calcularTotal(pedido.itens).toFixed(2).replace('.', ',')}
+                    R$ {formatarValor(calcularTotal(pedido.itens))}
                   </td>
+                  
                   <td className="p-3 text-center">
-                    {/* O LINK DINÂMICO DE EDIÇÃO QUE FALTAVA! */}
+                    {/* 3. CORES DO BOTÃO MUDADAS PARA A PALETA VERDE (bg-green, text-green, etc) */}
                     <Link 
                       to={`/pedido/${pedido.id}/editar`}
-                      className="inline-block bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-600 hover:text-white px-3 py-1 rounded text-xs font-bold transition-all"
+                      className="inline-block bg-green-50 text-green-700 border border-green-200 hover:bg-green-600 hover:text-white px-3 py-1 rounded text-xs font-bold transition-all"
                     >
                       Editar
                     </Link>
