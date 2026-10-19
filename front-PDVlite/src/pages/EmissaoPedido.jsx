@@ -47,7 +47,6 @@ export default function EmissaoPedido() {
     }
 
     try {
-      // O SEGREDO ESTÁ AQUI: Converter os dados da tela para o formato do Django
       const payload = {
         cliente: parseInt(clienteId),
         itens: itens.map(item => ({

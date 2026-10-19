@@ -48,25 +48,29 @@ export default function ItemPedidoForm({ produtos, onAdicionarItem }) {
     }
   }, [produtoId, precoUnitario, produtos]);
 
-  const handleAdicionar = (e) => {
+const handleAdicionar = (e) => {
     e.preventDefault();
     if (!produtoId || !quantidade || !precoUnitario) return;
 
     // BLOQUEIO FRONT-END DA RENTABILIDADE RUIM
     if (rentabilidadePreview === 'RUIM') {
       alert('Venda bloqueada: Não é permitido adicionar produtos com rentabilidade RUIM (desconto > 10%).');
-      return; // Interrompe a função, não deixa adicionar à lista!
+      return;
     }
 
-    if (!quantidade || quantidade < 1) {
+    // Converte de forma segura, quer venha como texto ou número
+    const qtdNum = parseInt(quantidade, 10);
+
+    // Verificação de quantidade agrupada e segura
+    if (isNaN(qtdNum) || qtdNum < 1) {
       alert("A quantidade deve ser um número inteiro maior que zero.");
       return;
     }
 
     const produtoSelecionado = produtos.find(p => p.id === parseInt(produtoId));
     
-    const qtdNum = parseFloat(quantidade.replace(',', '.'));
-    const precoNum = parseFloat(precoUnitario.replace(/\./g, '').replace(',', '.'));
+    // O precoUnitario precisa do .toString() por segurança antes do replace
+    const precoNum = parseFloat(precoUnitario.toString().replace(/\./g, '').replace(',', '.'));
     const multiploNum = parseFloat(produtoSelecionado.multiplo);
 
     if (multiploNum > 0) {
