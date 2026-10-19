@@ -13,7 +13,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         if refresh_token:
             response.set_cookie(
                 key='refresh_token', value=refresh_token,
-                httponly=True, secure=not settings.DEBUG, samesite='Lax', max_age=7*24*60*60
+                httponly=True, secure=True,samesite='None', max_age=7*24*60*60
             )
             del response.data['refresh']
         return response

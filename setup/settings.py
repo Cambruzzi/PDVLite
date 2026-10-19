@@ -28,7 +28,18 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'pdvlite.pythonanywhere.com',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://pdvlite.pythonanywhere.com',
+    'https://pdv-lite.vercel.app',
+    'http://localhost:5173',
+]
+
 
 
 # Application definition
@@ -59,11 +70,14 @@ MIDDLEWARE = [
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 cors_origins_env = os.environ.get(
-    'CORS_ALLOWED_ORIGINS', 
-    'http://localhost:5173,http://127.0.0.1:5173',
-    'pdvlite.pythonanywhere.com'
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:5173,http://127.0.0.1:5173,https://pdvlite.pythonanywhere.com'
 )
-CORS_ALLOWED_ORIGINS = cors_origins_env.split(',')
+CORS_ALLOWED_ORIGINS = [
+    "https://pdv-lite.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
